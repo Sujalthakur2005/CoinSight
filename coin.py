@@ -902,7 +902,7 @@ def main():
     """
     Main function to run the cryptocurrency signal generator with live updates.
     """
-    print(text2art("ChainSight", font="poison"))
+    print(text2art("CoinSight", font="poison"))
     print("--- Starting Cryptocurrency Signal Generator ---")
     print(f"Fetching data and updating every {UPDATE_INTERVAL_SECONDS} seconds...")
     print("Press Ctrl+C to stop the application.\n")
