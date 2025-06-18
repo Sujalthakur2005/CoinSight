@@ -1,17 +1,17 @@
-ChainSight: The Ultimate Crypto Market Analysis Powerhouse
+CoinSight: The Ultimate Crypto Market Analysis Powerhouse
 Unleash the Power of Data-Driven Crypto Decisions.
 
 ___________________________________________________________________________________________________________________________________________________________________
 
 
-ChainSight is not just another crypto tool; it's your all-in-one, real-time, intelligent cryptocurrency market analysis solution. Designed for both novice enthusiasts and seasoned traders, ChainSight combines cutting-edge technical indicators with a proprietary Machine Learning model to deliver actionable insights and clear, confident recommendations, helping you navigate the volatile crypto landscape with unparalleled precision.
+CoinSight is not just another crypto tool; it's your all-in-one, real-time, intelligent cryptocurrency market analysis solution. Designed for both novice enthusiasts and seasoned traders, CoinSight combines cutting-edge technical indicators with a proprietary Machine Learning model to deliver actionable insights and clear, confident recommendations, helping you navigate the volatile crypto landscape with unparalleled precision.
 
-Stop guessing. Start knowing. ChainSight brings clarity to chaos.
+Stop guessing. Start knowing. CoinSight brings clarity to chaos.
 
 ___________________________________________________________________________________________________________________________________________________________________
 
 
-✨ Why ChainSight is the BEST Analysis Tool on the Internet
+✨ Why CoinSight is the BEST Analysis Tool on the Internet
 Real-Time, Dynamic Insights: Automatically fetches and processes live market data, providing continuous updates to keep you ahead of the curve.
 
 Comprehensive Technical Analysis: Integrates an exhaustive suite of industry-standard indicators including:
@@ -45,7 +45,7 @@ User-Friendly Interface: A simple command-line interface makes it accessible for
 ___________________________________________________________________________________________________________________________________________________________________
 
 Configuration (Optional)
-You can adjust various parameters by editing the chainsight.py file directly:
+You can adjust various parameters by editing the CoinSight.py file directly:
 
 DEFAULT_VS_CURRENCY: The default fiat currency for comparison.
 
@@ -62,7 +62,7 @@ MEME_COIN_IDS: Customize the list of meme coin IDs for prioritized trending anal
 STABLECOIN_IDS: Define known stablecoin IDs for special ML prediction handling.
 
 📊 Output Example
-ChainSight provides a clear and comprehensive report for each monitored cryptocurrency, including:
+CoinSight provides a clear and comprehensive report for each monitored cryptocurrency, including:
 
 Current Market Price
 
@@ -81,7 +81,7 @@ Example snippet (actual output is more detailed):
 --------------------------------------------------------------------------------
 
 ⚠️ Disclaimer
-ChainSight is for informational and educational purposes only and should NOT be considered financial or investment advice. The cryptocurrency market is highly volatile and unpredictable. Machine Learning predictions are experimental and should not be solely relied upon for making trading decisions. Always conduct your own research and consult with a qualified financial professional before making any investment decisions. The creators of ChainSight are not responsible for any financial losses incurred from using this tool.
+CoinSight is for informational and educational purposes only and should NOT be considered financial or investment advice. The cryptocurrency market is highly volatile and unpredictable. Machine Learning predictions are experimental and should not be solely relied upon for making trading decisions. Always conduct your own research and consult with a qualified financial professional before making any investment decisions. The creators of CoinSight are not responsible for any financial losses incurred from using this tool.
 
 🤝 Contributing
 Contributions are welcome! If you have suggestions for improvements, new features, or bug fixes, please open an issue or submit a pull request.
@@ -89,7 +89,7 @@ Contributions are welcome! If you have suggestions for improvements, new feature
 📄 License
 
 🚀 Getting Started
-Follow these simple steps to set up and run ChainSight on your local machine.
+Follow these simple steps to set up and run CoinSight on your local machine.
 
 Prerequisites
 Python 3.8+
