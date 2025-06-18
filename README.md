@@ -1,9 +1,15 @@
 ChainSight: The Ultimate Crypto Market Analysis Powerhouse
 Unleash the Power of Data-Driven Crypto Decisions.
 
+___________________________________________________________________________________________________________________________________________________________________
+
+
 ChainSight is not just another crypto tool; it's your all-in-one, real-time, intelligent cryptocurrency market analysis solution. Designed for both novice enthusiasts and seasoned traders, ChainSight combines cutting-edge technical indicators with a proprietary Machine Learning model to deliver actionable insights and clear, confident recommendations, helping you navigate the volatile crypto landscape with unparalleled precision.
 
 Stop guessing. Start knowing. ChainSight brings clarity to chaos.
+
+___________________________________________________________________________________________________________________________________________________________________
+
 
 ✨ Why ChainSight is the BEST Analysis Tool on the Internet
 Real-Time, Dynamic Insights: Automatically fetches and processes live market data, providing continuous updates to keep you ahead of the curve.
@@ -34,42 +40,9 @@ Detailed & Exportable Reports: Displays all analyzed data and recommendations in
 
 User-Friendly Interface: A simple command-line interface makes it accessible for anyone to run and understand.
 
-🚀 Getting Started
-Follow these simple steps to set up and run ChainSight on your local machine.
 
-Prerequisites
-Python 3.8+
 
-Internet connection to fetch data from CoinGecko API.
-
-Installation
-Clone the Repository (or download the files):
-
-git clone https://github.com/your-username/chainsight.git
-cd chainsight
-
-Install Dependencies:
-ChainSight relies on a few external Python libraries. It's highly recommended to use a virtual environment.
-
-# (Optional) Create a virtual environment
-python -m venv venv
-# Activate the virtual environment
-# On Windows: venv\Scripts\activate
-# On macOS/Linux: source venv/bin/activate
-
-# Install the required libraries
-pip install -r requirements.txt
-
-⚙️ Usage
-Once installed, running ChainSight is straightforward:
-
-python chainsight.py
-
-The script will prompt you to enter a currency to compare against (e.g., usd, eur). Press Enter to use the default (usd).
-
-ChainSight will then continuously fetch data, perform analysis, and display real-time reports directly in your terminal, updating every 60 seconds (configurable).
-
-To stop the application, simply press Ctrl+C.
+___________________________________________________________________________________________________________________________________________________________________
 
 Configuration (Optional)
 You can adjust various parameters by editing the chainsight.py file directly:
@@ -147,4 +120,11 @@ ChainSight is for informational and educational purposes only and should NOT be 
 Contributions are welcome! If you have suggestions for improvements, new features, or bug fixes, please open an issue or submit a pull request.
 
 📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+
+🚀 Getting Started
+Follow these simple steps to set up and run ChainSight on your local machine.
+
+Prerequisites
+Python 3.8+
+
+Internet connection to fetch data from CoinGecko API.
