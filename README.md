@@ -76,41 +76,8 @@ Detailed Analysis: A breakdown of insights from each indicator.
 
 Example snippet (actual output is more detailed):
 
---- Live Crypto Signal Report (2024-05-15 10:30:00 UTC) ---
-================================================================================
-Analysing: Bitcoin (BTC)
-  Latest Date/Time: 2024-05-15 10:00
-  Latest Price (Close): 62500.0000 USD
-  Short SMA (10 periods): 62000.0000 USD
-  Long SMA (30 periods): 61500.0000 USD
-  RSI (14 periods): 65.23
-  MACD Line (12,26): 150.0000
-  Signal Line (9): 120.0000
-  MACD Histogram: 30.0000
-  Bollinger Bands (20,2 StdDev):
-    Middle Band: 61800.0000 USD
-    Upper Band: 63000.0000 USD
-    Lower Band: 60600.0000 USD
-  Stochastic Oscillator (14,3): %K=75.50, %D=70.10
-  Average True Range (14 periods): 500.0000 USD
-  Ichimoku Cloud:
-    Tenkan-sen (9): 62300.0000
-    Kijun-sen (26): 61900.0000
-    Senkou Span A: 62100.0000
-    Senkou Span B (52): 61800.0000
-    Chikou Span (Lag 26): 60000.0000
-  ML Predicted Next Close (4 hours ahead): 62750.0000 USD
-  Recommendation:
-  [92mBUY for Bitcoin (As of 10:30 AM EST) with 85.0% Confidence:[0m
-   SMA Trend: Bullish (Short SMA 62000.0000 > Long SMA 61500.0000).
-   RSI (65.23): Neutral. No strong overbought/oversold condition.
-   MACD: Bullish momentum building (MACD Line 150.0000 > Signal Line 120.0000, Histogram positive 30.0000).
-   Bollinger Bands: Price (62500.0000 USD) is within bands (60600.0000-63000.0000 USD).
-   Stochastic (75.50/70.10): Bullish crossover. Momentum shifting up.
-   ATR (14 periods): 500.0000 USD. Current volatility measure.
-   Ichimoku Cloud: Price is above Tenkan/Kijun (Bullish); Tenkan-sen > Kijun-sen (Bullish momentum); Price is within the Cloud (Neutral/Consolidation); Bullish Cloud (Senkou A > Senkou B); Chikou Span is above lagged price (Bullish).
-   ML Prediction for 4 hours ahead: Next close predicted to rise by 0.40% to 62750.0000 USD.
-   Consider executing a BUY signal within the next 4 hours ahead.
+![image](https://github.com/user-attachments/assets/746063ce-c520-424f-89a3-ff76264d406b)
+
 --------------------------------------------------------------------------------
 
 ⚠️ Disclaimer
