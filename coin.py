@@ -2,7 +2,7 @@ import collections
 import requests
 import time
 import os
-from datetime import datetime, timedelta, UTC # Import UTC for timezone-aware datetime
+from datetime import datetime, timedelta, UTC
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
@@ -14,7 +14,7 @@ try:
     from pycoingecko import CoinGeckoAPI
 except ImportError:
     print("Error: 'pycoingecko' library not found.")
-    print("Please install it using: pip install pycoingecko numpy scikit-learn")
+    print("Please install it using: pip install pycoingecko numpy scikit-learn art")
     exit()
 
 # --- Configuration ---
@@ -188,7 +188,7 @@ def calculate_rsi(prices, window):
         if avg_loss == 0:
             rs = np.inf
         else:
-            rs = avg_gain / avg_loss # Corrected bug: was avg_gain / rs
+            rs = avg_gain / avg_loss
         
         rsi_values[i] = 100 - (100 / (1 + rs))
             
@@ -594,17 +594,12 @@ def calculate_confidence_score(overall_sentiment_score):
     Strong bullish/bearish maps to higher confidence.
     """
     # Define the min and max possible sentiment scores for normalization
-    # These are rough estimates based on the current scoring logic.
-    MIN_SENTIMENT = -5.5
-    MAX_SENTIMENT = 5.5
+    MIN_SENTIMENT = -8.5 # Adjusted based on new potential max/min
+    MAX_SENTIMENT = 8.5
 
     if overall_sentiment_score >= 0:
-        # Scale positive sentiment from 0 to 0.5 to 50% to 100%
-        # (sentiment_score - 0) / (MAX_SENTIMENT - 0) * 0.5 + 0.5
         confidence = (overall_sentiment_score / MAX_SENTIMENT) * 50 + 50
     else:
-        # Scale negative sentiment from -0.5 to 0 to 50% to 100% (in terms of conviction)
-        # abs(sentiment_score - 0) / abs(MIN_SENTIMENT - 0) * 0.5 + 0.5
         confidence = (abs(overall_sentiment_score) / abs(MIN_SENTIMENT)) * 50 + 50
     
     # Cap confidence between 0 and 100
@@ -614,34 +609,54 @@ def calculate_confidence_score(overall_sentiment_score):
 
 # --- Recommendation Logic ---
 def get_recommendation(latest_open, latest_high, latest_low, latest_close, 
-                         latest_short_sma, latest_long_sma, latest_signal, 
-                         latest_rsi, latest_macd_line, latest_signal_line, latest_macd_histogram,
-                         latest_bb_middle, latest_bb_upper, latest_bb_lower,
-                         latest_stoch_k, latest_stoch_d, latest_atr,
-                         latest_tenkan_sen, latest_kijun_sen, latest_senkou_span_a, latest_senkou_span_b, latest_chikou_span,
-                         predicted_next_close, 
-                         crypto_id, vs_currency, current_utc_datetime,
-                         prediction_timeframe_description, overall_confidence_percent): # Added prediction_timeframe_description and overall_confidence_percent
+                       latest_short_sma, latest_long_sma, latest_signal, 
+                       latest_rsi, latest_macd_line, latest_signal_line, latest_macd_histogram,
+                       latest_bb_middle, latest_bb_upper, latest_bb_lower,
+                       latest_stoch_k, latest_stoch_d, latest_atr,
+                       latest_tenkan_sen, latest_kijun_sen, latest_senkou_span_a, latest_senkou_span_b, latest_chikou_span,
+                       predicted_next_close, 
+                       crypto_id, vs_currency, current_utc_datetime,
+                       prediction_timeframe_description, overall_confidence_percent,
+                       is_stablecoin): # Added is_stablecoin parameter
     """
     Generates a sophisticated recommendation based on SMA, RSI, MACD, Bollinger Bands, Stochastic, ATR, and Ichimoku Cloud,
     and a basic ML price prediction. Includes time frame for signal execution and confidence.
     """
     recommendation_parts = []
     
-    # Convert current UTC time to EST
-    est_offset = timedelta(hours=-5)
+    # Convert current UTC time to EDT (UTC-4)
+    est_offset = timedelta(hours=-4) # Changed from -5 to -4 for EDT
     current_est_datetime = current_utc_datetime + est_offset
-    est_time_str = current_est_datetime.strftime('%I:%M %p EST')
+    est_time_str = current_est_datetime.strftime('%I:%M %p EDT') # Changed from EST to EDT
+
+    price_str = f"{latest_close:.4f} {vs_currency.upper()}"
+
+    # Handle stablecoins with specific recommendation logic
+    if is_stablecoin:
+        final_recommendation_prefix = "HOLD / STABLE"
+        final_recommendation_color = "\033[96m" # Cyan for stablecoin
+        recommendation_parts.append(f"{crypto_id.capitalize()} is a stablecoin designed to maintain a peg around 1.00 {vs_currency.upper()}.")
+        
+        if not np.isnan(predicted_next_close):
+            recommendation_parts.append(f"ML Prediction: Next close predicted to remain stable around {predicted_next_close:.4f} {vs_currency.upper()}.")
+        else:
+            recommendation_parts.append("ML Prediction: Not available for this stablecoin.")
+        recommendation_parts.append("Technical indicators sensitive to volatility are not directly applicable or may show misleading signals for stablecoins.")
+
+        full_recommendation = (
+            f"{final_recommendation_color}{final_recommendation_prefix} for {crypto_id.capitalize()} (As of {est_time_str}) with {overall_confidence_percent:.1f}% Confidence:\033[0m\n"
+            + "  " + "\n  ".join(recommendation_parts)
+        )
+        return full_recommendation
 
     # Check for sufficient data for all indicators (using np.isnan for NaN values)
     if any(np.isnan(val) for val in [latest_close, latest_short_sma, latest_long_sma, latest_rsi, 
-                                      latest_macd_line, latest_signal_line, latest_macd_histogram,
-                                      latest_bb_middle, latest_bb_upper, latest_bb_lower,
-                                      latest_stoch_k, latest_stoch_d, latest_atr,
-                                      latest_tenkan_sen, latest_kijun_sen, latest_senkou_span_a, latest_senkou_span_b, latest_chikou_span]):
+                                     latest_macd_line, latest_signal_line, latest_macd_histogram,
+                                     latest_bb_middle, latest_bb_upper, latest_bb_lower,
+                                     latest_stoch_k, latest_stoch_d, latest_atr,
+                                     latest_tenkan_sen, latest_kijun_sen, latest_senkou_span_a, latest_senkou_span_b, latest_chikou_span]):
         return f"Not enough data for a comprehensive recommendation as of {est_time_str}."
 
-    price_str = f"{latest_close:.4f} {vs_currency.upper()}"
     short_sma_str = f"{latest_short_sma:.4f}"
     long_sma_str = f"{latest_long_sma:.4f}"
     rsi_str = f"{latest_rsi:.2f}"
@@ -693,7 +708,6 @@ def get_recommendation(latest_open, latest_high, latest_low, latest_close,
         recommendation_parts.append(f"Bollinger Bands: Price ({price_str}) is within bands ({bb_lower_str}-{bb_upper_str}).")
 
     # --- Stochastic Oscillator Analysis ---
-    # Prioritize overbought/oversold first as per prompt's analysis
     if latest_stoch_k >= 80 or latest_stoch_d >= 80:
         recommendation_parts.append(f"Stochastic ({stoch_k_str}/{stoch_d_str}): Overbought. Potential bearish reversal.")
     elif latest_stoch_k <= 20 or latest_stoch_d <= 20:
@@ -758,18 +772,14 @@ def get_recommendation(latest_open, latest_high, latest_low, latest_close,
 
     # --- ML Prediction Analysis ---
     if not np.isnan(predicted_next_close):
-        # Handle stablecoins specifically for ML prediction display
-        if crypto_id in STABLECOIN_IDS:
-            recommendation_parts.append(f"ML Prediction: Next close predicted to be stable around {predicted_next_close:.4f} {vs_currency.upper()} (Stablecoin behavior).")
+        prediction_diff = ((predicted_next_close - latest_close) / latest_close) * 100
+        prediction_str = f"{predicted_next_close:.4f} {vs_currency.upper()}"
+        if prediction_diff > 0.5:
+            recommendation_parts.append(f"ML Prediction for {prediction_timeframe_description}: Next close predicted to rise by {prediction_diff:.2f}% to {prediction_str}.")
+        elif prediction_diff < -0.5:
+            recommendation_parts.append(f"ML Prediction for {prediction_timeframe_description}: Next close predicted to fall by {abs(prediction_diff):.2f}% to {prediction_str}.")
         else:
-            prediction_diff = ((predicted_next_close - latest_close) / latest_close) * 100
-            prediction_str = f"{predicted_next_close:.4f} {vs_currency.upper()}"
-            if prediction_diff > 0.5:
-                recommendation_parts.append(f"ML Prediction for {prediction_timeframe_description}: Next close predicted to rise by {prediction_diff:.2f}% to {prediction_str}.")
-            elif prediction_diff < -0.5:
-                recommendation_parts.append(f"ML Prediction for {prediction_timeframe_description}: Next close predicted to fall by {abs(prediction_diff):.2f}% to {prediction_str}.")
-            else:
-                recommendation_parts.append(f"ML Prediction for {prediction_timeframe_description}: Next close predicted to be stable around {prediction_str} ({prediction_diff:.2f}% change).")
+            recommendation_parts.append(f"ML Prediction for {prediction_timeframe_description}: Next close predicted to be stable around {prediction_str} ({prediction_diff:.2f}% change).")
     else:
         recommendation_parts.append("ML Prediction: Not enough data for prediction or prediction failed.")
 
@@ -813,7 +823,7 @@ def get_recommendation(latest_open, latest_high, latest_low, latest_close,
         elif latest_close < latest_chikou_span: overall_sentiment_score -= 0.5
 
     # ML Prediction (if not stablecoin and valid prediction)
-    if not np.isnan(predicted_next_close) and crypto_id not in STABLECOIN_IDS:
+    if not np.isnan(predicted_next_close): # ML prediction is always valid here as stablecoin path handled above
         prediction_diff = ((predicted_next_close - latest_close) / latest_close) * 100
         if prediction_diff > 0.5: overall_sentiment_score += 1
         elif prediction_diff < -0.5: overall_sentiment_score -= 1
@@ -822,19 +832,20 @@ def get_recommendation(latest_open, latest_high, latest_low, latest_close,
     final_recommendation_color = ""
 
     # Determine overall recommendation based on sentiment score and add time frame/confidence
-    if overall_sentiment_score >= 3: # Strong buy threshold adjusted
+    # Adjusted thresholds for more robust recommendations
+    if overall_sentiment_score >= 4.0: 
         final_recommendation_prefix = "Strong BUY"
         final_recommendation_color = "\033[92m"
         recommendation_parts.append(f"Consider executing a BUY signal within the next {prediction_timeframe_description}.")
-    elif overall_sentiment_score >= 1.5: # Moderate buy threshold adjusted
+    elif overall_sentiment_score >= 2.0: 
         final_recommendation_prefix = "BUY"
         final_recommendation_color = "\033[92m"
         recommendation_parts.append(f"Consider executing a BUY signal within the next {prediction_timeframe_description}.")
-    elif overall_sentiment_score <= -3: # Strong sell threshold adjusted
+    elif overall_sentiment_score <= -4.0: 
         final_recommendation_prefix = "Strong SELL"
         final_recommendation_color = "\033[91m"
         recommendation_parts.append(f"Consider executing a SELL signal within the next {prediction_timeframe_description}. Act swiftly to limit potential losses.")
-    elif overall_sentiment_score <= -1.5: # Moderate sell threshold adjusted
+    elif overall_sentiment_score <= -2.0: 
         final_recommendation_prefix = "SELL"
         final_recommendation_color = "\033[91m"
         recommendation_parts.append(f"Consider executing a SELL signal within the next {prediction_timeframe_description}.")
@@ -1065,32 +1076,34 @@ def main():
                 latest_chikou_span = np.nan # Not enough historical data for the lagged Chikou Span
 
             # Calculate the overall sentiment score (same as original logic)
+            # This is primarily for confidence calculation now, as recommendation logic has stablecoin specific path
             overall_sentiment_score = 0
-            if latest_short_sma > latest_long_sma: overall_sentiment_score += 1
-            elif latest_short_sma < latest_long_sma: overall_sentiment_score -= 1
-            if latest_rsi >= 70: overall_sentiment_score -= 1
-            elif latest_rsi <= 30: overall_sentiment_score += 1
-            if latest_macd_line > latest_signal_line and latest_macd_histogram > 0: overall_sentiment_score += 1
-            elif latest_macd_line < latest_signal_line and latest_macd_histogram < 0: overall_sentiment_score -= 1
-            if latest_close < latest_bb_lower: overall_sentiment_score += 0.5
-            elif latest_close > latest_bb_upper: overall_sentiment_score -= 0.5
-            if (latest_stoch_k >= 80 or latest_stoch_d >= 80) : overall_sentiment_score -= 1
-            elif (latest_stoch_k <= 20 or latest_stoch_d <= 20): overall_sentiment_score += 1
-            elif latest_stoch_k > latest_stoch_d and latest_stoch_d < 80: overall_sentiment_score += 0.5
-            elif latest_stoch_k < latest_stoch_d and latest_stoch_d > 20: overall_sentiment_score -= 0.5
-            if latest_close > max(latest_senkou_span_a, latest_senkou_span_b): overall_sentiment_score += 1.5
-            elif latest_close < min(latest_senkou_span_a, latest_senkou_span_b): overall_sentiment_score -= 1.5
-            if latest_tenkan_sen > latest_kijun_sen: overall_sentiment_score += 0.5
-            else: overall_sentiment_score -= 0.5
-            if not np.isnan(latest_chikou_span):
-                if latest_close > latest_chikou_span: overall_sentiment_score += 0.5
-                elif latest_close < latest_chikou_span: overall_sentiment_score -= 0.5
-            if not np.isnan(predicted_next_close) and coin_id not in STABLECOIN_IDS:
-                prediction_diff = ((predicted_next_close - latest_close) / latest_close) * 100
-                if prediction_diff > 0.5: overall_sentiment_score += 1
-                elif prediction_diff < -0.5: overall_sentiment_score -= 1
+            if not is_stablecoin: # Only apply sentiment scoring for non-stablecoins
+                if latest_short_sma > latest_long_sma: overall_sentiment_score += 1
+                elif latest_short_sma < latest_long_sma: overall_sentiment_score -= 1
+                if latest_rsi >= 70: overall_sentiment_score -= 1
+                elif latest_rsi <= 30: overall_sentiment_score += 1
+                if latest_macd_line > latest_signal_line and latest_macd_histogram > 0: overall_sentiment_score += 1
+                elif latest_macd_line < latest_signal_line and latest_macd_histogram < 0: overall_sentiment_score -= 1
+                if latest_close < latest_bb_lower: overall_sentiment_score += 0.5
+                elif latest_close > latest_bb_upper: overall_sentiment_score -= 0.5
+                if (latest_stoch_k >= 80 or latest_stoch_d >= 80) : overall_sentiment_score -= 1
+                elif (latest_stoch_k <= 20 or latest_stoch_d <= 20): overall_sentiment_score += 1
+                elif latest_stoch_k > latest_stoch_d and latest_stoch_d < 80: overall_sentiment_score += 0.5
+                elif latest_stoch_k < latest_stoch_d and latest_stoch_d > 20: overall_sentiment_score -= 0.5
+                if latest_close > max(latest_senkou_span_a, latest_senkou_span_b): overall_sentiment_score += 1.5
+                elif latest_close < min(latest_senkou_span_a, latest_senkou_span_b): overall_sentiment_score -= 1.5
+                if latest_tenkan_sen > latest_kijun_sen: overall_sentiment_score += 0.5
+                else: overall_sentiment_score -= 0.5
+                if not np.isnan(latest_chikou_span):
+                    if latest_close > latest_chikou_span: overall_sentiment_score += 0.5
+                    elif latest_close < latest_chikou_span: overall_sentiment_score -= 0.5
+                if not np.isnan(predicted_next_close):
+                    prediction_diff = ((predicted_next_close - latest_close) / latest_close) * 100
+                    if prediction_diff > 0.5: overall_sentiment_score += 1
+                    elif prediction_diff < -0.5: overall_sentiment_score -= 1
 
-            # Calculate confidence score
+            # Calculate confidence score (now always based on the non-stablecoin logic or defaults for stablecoins)
             confidence_percent = calculate_confidence_score(overall_sentiment_score)
 
 
@@ -1105,38 +1118,43 @@ def main():
                 predicted_next_close, 
                 coin_id, vs_currency, current_utc_datetime,
                 prediction_timeframe_description, # Pass timeframe description
-                confidence_percent # Pass confidence percentage
+                confidence_percent, # Pass confidence percentage
+                is_stablecoin # Pass is_stablecoin flag
             )
             
             print(f"  Latest Date/Time: {latest_date_obj.strftime('%Y-%m-%d %H:%M')}")
             print(f"  Latest Price (Close): {latest_close:.4f} {vs_currency.upper()}")
-            # Print indicator values only if they are not NaN
-            if not np.isnan(latest_short_sma): print(f"  Short SMA ({SHORT_SMA_WINDOW} periods): {latest_short_sma:.4f} {vs_currency.upper()}")
-            if not np.isnan(latest_long_sma): print(f"  Long SMA ({LONG_SMA_WINDOW} periods): {latest_long_sma:.4f} {vs_currency.upper()}")
-            if not np.isnan(latest_rsi): print(f"  RSI ({RSI_WINDOW} periods): {latest_rsi:.2f}")
-            if not np.isnan(latest_macd_line): print(f"  MACD Line ({FAST_EMA_WINDOW},{SLOW_EMA_WINDOW}): {latest_macd_line:.4f}")
-            if not np.isnan(latest_signal_line): print(f"  Signal Line ({SIGNAL_EMA_WINDOW}): {latest_signal_line:.4f}")
-            if not np.isnan(latest_macd_histogram): print(f"  MACD Histogram: {latest_macd_histogram:.4f}")
-            if not np.isnan(latest_bb_middle):
-                print(f"  Bollinger Bands ({BB_WINDOW},{BB_STD_DEV_MULTIPLIER} StdDev):")
-                print(f"    Middle Band: {latest_bb_middle:.4f} {vs_currency.upper()}")
-                print(f"    Upper Band: {latest_bb_upper:.4f} {vs_currency.upper()}")
-                print(f"    Lower Band: {latest_bb_lower:.4f} {vs_currency.upper()}")
-            if not np.isnan(latest_stoch_k): print(f"  Stochastic Oscillator ({STOCH_K_WINDOW},{STOCH_D_WINDOW}): %K={latest_stoch_k:.2f}, %D={latest_stoch_d:.2f}")
-            if not np.isnan(latest_atr): print(f"  Average True Range ({ATR_WINDOW} periods): {latest_atr:.4f} {vs_currency.upper()}")
-            if not np.isnan(latest_tenkan_sen):
-                print(f"  Ichimoku Cloud:")
-                print(f"    Tenkan-sen ({TENKAN_SEN_WINDOW}): {latest_tenkan_sen:.4f}")
-                print(f"    Kijun-sen ({KIJUN_SEN_WINDOW}): {latest_kijun_sen:.4f}")
-                print(f"    Senkou Span A: {latest_senkou_span_a:.4f}")
-                print(f"    Senkou Span B ({SENKOU_SPAN_B_WINDOW}): {latest_senkou_span_b:.4f}")
-                print(f"    Chikou Span (Lag {CHIKOU_SPAN_LAG}): {latest_chikou_span:.4f}")
-            
-            if not np.isnan(predicted_next_close):
-                print(f"  ML Predicted Next Close ({prediction_timeframe_description}): {predicted_next_close:.4f} {vs_currency.upper()}")
-            else:
-                print(f"  ML Predicted Next Close: N/A (Not enough data for prediction)")
-            
+            # Print indicator values only if they are not NaN and not a stablecoin
+            if not is_stablecoin:
+                if not np.isnan(latest_short_sma): print(f"  Short SMA ({SHORT_SMA_WINDOW} periods): {latest_short_sma:.4f} {vs_currency.upper()}")
+                if not np.isnan(latest_long_sma): print(f"  Long SMA ({LONG_SMA_WINDOW} periods): {latest_long_sma:.4f} {vs_currency.upper()}")
+                if not np.isnan(latest_rsi): print(f"  RSI ({RSI_WINDOW} periods): {latest_rsi:.2f}")
+                if not np.isnan(latest_macd_line): print(f"  MACD Line ({FAST_EMA_WINDOW},{SLOW_EMA_WINDOW}): {latest_macd_line:.4f}")
+                if not np.isnan(latest_signal_line): print(f"  Signal Line ({SIGNAL_EMA_WINDOW}): {latest_signal_line:.4f}")
+                if not np.isnan(latest_macd_histogram): print(f"  MACD Histogram: {latest_macd_histogram:.4f}")
+                if not np.isnan(latest_bb_middle):
+                    print(f"  Bollinger Bands ({BB_WINDOW},{BB_STD_DEV_MULTIPLIER} StdDev):")
+                    print(f"    Middle Band: {latest_bb_middle:.4f} {vs_currency.upper()}")
+                    print(f"    Upper Band: {latest_bb_upper:.4f} {vs_currency.upper()}")
+                    print(f"    Lower Band: {latest_bb_lower:.4f} {vs_currency.upper()}")
+                if not np.isnan(latest_stoch_k): print(f"  Stochastic Oscillator ({STOCH_K_WINDOW},{STOCH_D_WINDOW}): %K={latest_stoch_k:.2f}, %D={latest_stoch_d:.2f}")
+                if not np.isnan(latest_atr): print(f"  Average True Range ({ATR_WINDOW} periods): {latest_atr:.4f} {vs_currency.upper()}")
+                if not np.isnan(latest_tenkan_sen):
+                    print(f"  Ichimoku Cloud:")
+                    print(f"    Tenkan-sen ({TENKAN_SEN_WINDOW}): {latest_tenkan_sen:.4f}")
+                    print(f"    Kijun-sen ({KIJUN_SEN_WINDOW}): {latest_kijun_sen:.4f}")
+                    print(f"    Senkou Span A: {latest_senkou_span_a:.4f}")
+                    print(f"    Senkou Span B ({SENKOU_SPAN_B_WINDOW}): {latest_senkou_span_b:.4f}")
+                    print(f"    Chikou Span (Lag {CHIKOU_SPAN_LAG}): {latest_chikou_span:.4f}")
+                
+                if not np.isnan(predicted_next_close):
+                    print(f"  ML Predicted Next Close ({prediction_timeframe_description}): {predicted_next_close:.4f} {vs_currency.upper()}")
+                else:
+                    print(f"  ML Predicted Next Close: N/A (Not enough data for prediction)")
+            else: # For stablecoins, print only relevant info
+                if not np.isnan(predicted_next_close):
+                     print(f"  ML Predicted Next Close: {predicted_next_close:.4f} {vs_currency.upper()} (Stablecoin behavior)")
+
             print(f"  Recommendation: \n{recommendation_text}")
             print("-" * 70)
 
@@ -1146,26 +1164,26 @@ def main():
                 "VS Currency": vs_currency.upper(),
                 "Latest Date/Time": latest_date_obj.strftime('%Y-%m-%d %H:%M'),
                 "Latest Price (Close)": f"{latest_close:.4f}",
-                f"Short SMA ({SHORT_SMA_WINDOW} periods)": f"{latest_short_sma:.4f}",
-                f"Long SMA ({LONG_SMA_WINDOW} periods)": f"{latest_long_sma:.4f}",
-                f"RSI ({RSI_WINDOW} periods)": f"{latest_rsi:.2f}",
-                f"MACD Line ({FAST_EMA_WINDOW},{SLOW_EMA_WINDOW})": f"{latest_macd_line:.4f}",
-                f"Signal Line ({SIGNAL_EMA_WINDOW})": f"{latest_signal_line:.4f}",
-                "MACD Histogram": f"{latest_macd_histogram:.4f}",
-                f"Bollinger Bands Middle ({BB_WINDOW},{BB_STD_DEV_MULTIPLIER} StdDev)": f"{latest_bb_middle:.4f}",
-                f"Bollinger Bands Upper ({BB_WINDOW},{BB_STD_DEV_MULTIPLIER} StdDev)": f"{latest_bb_upper:.4f}",
-                f"Bollinger Bands Lower ({BB_WINDOW},{BB_STD_DEV_MULTIPLIER} StdDev)": f"{latest_bb_lower:.4f}",
-                f"Stochastic %K ({STOCH_K_WINDOW},{STOCH_D_WINDOW})": f"{latest_stoch_k:.2f}",
-                f"Stochastic %D ({STOCH_K_WINDOW},{STOCH_D_WINDOW})": f"{latest_stoch_d:.2f}",
-                f"ATR ({ATR_WINDOW} periods)": f"{latest_atr:.4f}",
-                f"Ichimoku Tenkan-sen ({TENKAN_SEN_WINDOW})": f"{latest_tenkan_sen:.4f}",
-                f"Ichimoku Kijun-sen ({KIJUN_SEN_WINDOW})": f"{latest_kijun_sen:.4f}",
-                "Ichimoku Senkou Span A": f"{latest_senkou_span_a:.4f}",
-                f"Ichimoku Senkou Span B ({SENKOU_SPAN_B_WINDOW})": f"{latest_senkou_span_b:.4f}",
-                f"Ichimoku Chikou Span (Lag {CHIKOU_SPAN_LAG})": f"{latest_chikou_span:.4f}" if not np.isnan(latest_chikou_span) else "N/A",
+                f"Short SMA ({SHORT_SMA_WINDOW} periods)": f"{latest_short_sma:.4f}" if not is_stablecoin else "N/A",
+                f"Long SMA ({LONG_SMA_WINDOW} periods)": f"{latest_long_sma:.4f}" if not is_stablecoin else "N/A",
+                f"RSI ({RSI_WINDOW} periods)": f"{latest_rsi:.2f}" if not is_stablecoin else "N/A",
+                f"MACD Line ({FAST_EMA_WINDOW},{SLOW_EMA_WINDOW})": f"{latest_macd_line:.4f}" if not is_stablecoin else "N/A",
+                f"Signal Line ({SIGNAL_EMA_WINDOW})": f"{latest_signal_line:.4f}" if not is_stablecoin else "N/A",
+                "MACD Histogram": f"{latest_macd_histogram:.4f}" if not is_stablecoin else "N/A",
+                f"Bollinger Bands Middle ({BB_WINDOW},{BB_STD_DEV_MULTIPLIER} StdDev)": f"{latest_bb_middle:.4f}" if not is_stablecoin else "N/A",
+                f"Bollinger Bands Upper ({BB_WINDOW},{BB_STD_DEV_MULTIPLIER} StdDev)": f"{latest_bb_upper:.4f}" if not is_stablecoin else "N/A",
+                f"Bollinger Bands Lower ({BB_WINDOW},{BB_STD_DEV_MULTIPLIER} StdDev)": f"{latest_bb_lower:.4f}" if not is_stablecoin else "N/A",
+                f"Stochastic %K ({STOCH_K_WINDOW},{STOCH_D_WINDOW})": f"{latest_stoch_k:.2f}" if not is_stablecoin else "N/A",
+                f"Stochastic %D ({STOCH_K_WINDOW},{STOCH_D_WINDOW})": f"{latest_stoch_d:.2f}" if not is_stablecoin else "N/A",
+                f"ATR ({ATR_WINDOW} periods)": f"{latest_atr:.4f}" if not is_stablecoin else "N/A",
+                f"Ichimoku Tenkan-sen ({TENKAN_SEN_WINDOW})": f"{latest_tenkan_sen:.4f}" if not is_stablecoin else "N/A",
+                f"Ichimoku Kijun-sen ({KIJUN_SEN_WINDOW})": f"{latest_kijun_sen:.4f}" if not is_stablecoin else "N/A",
+                "Ichimoku Senkou Span A": f"{latest_senkou_span_a:.4f}" if not is_stablecoin else "N/A",
+                f"Ichimoku Senkou Span B ({SENKOU_SPAN_B_WINDOW})": f"{latest_senkou_span_b:.4f}" if not is_stablecoin else "N/A",
+                f"Ichimoku Chikou Span (Lag {CHIKOU_SPAN_LAG})": f"{latest_chikou_span:.4f}" if not np.isnan(latest_chikou_span) and not is_stablecoin else "N/A",
                 "ML Predicted Next Close": f"{predicted_next_close:.4f}" if not np.isnan(predicted_next_close) else "N/A",
                 "Confidence (%)": f"{confidence_percent:.1f}", # Added Confidence to CSV
-                "Overall Recommendation": recommendation_text.replace('\033[92m', '').replace('\033[91m', '').replace('\033[93m', '').replace('\033[0m', '').replace('\n', ' ')
+                "Overall Recommendation": recommendation_text.replace('\033[92m', '').replace('\033[91m', '').replace('\033[93m', '').replace('\033[96m', '').replace('\033[0m', '').replace('\n', ' ')
             })
 
 
